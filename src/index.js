@@ -35,15 +35,19 @@ async function driveFetch(env,path,init={},email){
 }
 async function user(req,env){
   const sid=getCookie(req,"mt_session");if(!sid)return null;
-  // Sessions live in D1, not KV: KV is only eventually consistent (a write
-  // can take up to ~60s to be readable everywhere), which meant a user was
-  // sometimes bounced straight back to the login page immediately after
-  // signing in, before their new session had propagated. D1 gives us a
-  // read-after-write guarantee, so a session is valid the instant it's created.
-  const row=await env.DB.prepare("SELECT email,expires_at FROM sessions WHERE id=?").bind(sid).first();
+  // Sessions live in D1, not KV, so a plain write-then-read isn't at the
+  // mercy of KV's ~60s global propagation delay. But D1 itself can serve
+  // reads from a nearby read replica that hasn't caught up to a very
+  // recent write yet - the same kind of lag, one layer down - which is why
+  // switching to D1 alone still bounced people back to login right after
+  // signing in. withSession("first-primary") forces this particular read
+  // to go to the primary database instead of a possibly-stale replica, so
+  // a session is guaranteed visible the instant it's created.
+  const session=env.DB.withSession("first-primary");
+  const row=await session.prepare("SELECT email,expires_at FROM sessions WHERE id=?").bind(sid).first();
   if(!row)return null;
   if(Number(row.expires_at)<Date.now()){
-    await env.DB.prepare("DELETE FROM sessions WHERE id=?").bind(sid).run().catch(()=>{});
+    await session.prepare("DELETE FROM sessions WHERE id=?").bind(sid).run().catch(()=>{});
     return null;
   }
   return {email:row.email};
