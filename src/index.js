@@ -33,7 +33,21 @@ async function driveFetch(env,path,init={},email){
   }
   return res;
 }
-async function user(req,env){const sid=getCookie(req,"mt_session");if(!sid)return null;const x=await env.SESSIONS.get("session:"+sid);return x?JSON.parse(x):null}
+async function user(req,env){
+  const sid=getCookie(req,"mt_session");if(!sid)return null;
+  // Sessions live in D1, not KV: KV is only eventually consistent (a write
+  // can take up to ~60s to be readable everywhere), which meant a user was
+  // sometimes bounced straight back to the login page immediately after
+  // signing in, before their new session had propagated. D1 gives us a
+  // read-after-write guarantee, so a session is valid the instant it's created.
+  const row=await env.DB.prepare("SELECT email,expires_at FROM sessions WHERE id=?").bind(sid).first();
+  if(!row)return null;
+  if(Number(row.expires_at)<Date.now()){
+    await env.DB.prepare("DELETE FROM sessions WHERE id=?").bind(sid).run().catch(()=>{});
+    return null;
+  }
+  return {email:row.email};
+}
 async function requireUser(req,env){const u=await user(req,env);if(!u)throw Object.assign(Error("Not signed in"),{status:401});return u}
 async function hashPassword(password){
   const salt=crypto.getRandomValues(new Uint8Array(16));
@@ -96,8 +110,14 @@ async function consumeOtp(env,email,purpose,otp){
 
 async function createSession(env,email){
   const sid=crypto.randomUUID(),sessionTtl=31536000;
-  await env.SESSIONS.put("session:"+sid,JSON.stringify({email}),{expirationTtl:sessionTtl});
+  await env.DB.prepare(
+    "INSERT INTO sessions(id,email,created_at,expires_at) VALUES(?,?,?,?)"
+  ).bind(sid,email,Date.now(),Date.now()+sessionTtl*1000).run();
   return cookie("mt_session",sid,sessionTtl);
+}
+async function destroySession(req,env){
+  const sid=getCookie(req,"mt_session");
+  if(sid)await env.DB.prepare("DELETE FROM sessions WHERE id=?").bind(sid).run().catch(()=>{});
 }
 async function ensureAuthSchema(env){
   // Keep existing production D1 databases compatible even when the
@@ -117,6 +137,20 @@ async function ensureAuthSchema(env){
     "CREATE INDEX IF NOT EXISTS idx_auth_otps_email_purpose ON auth_otps(email,purpose)"
   ).run();
 
+  // Sessions live in D1 (not KV) so a session is readable the instant it's
+  // created - see the comment on user() for why this matters.
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      expires_at INTEGER NOT NULL
+    )
+  `).run();
+  await env.DB.prepare(
+    "CREATE INDEX IF NOT EXISTS idx_sessions_email ON sessions(email)"
+  ).run();
+
   // Older databases may have users without password_hash.
   // SQLite throws when the column already exists, so ignore only that case.
   try{
@@ -132,6 +166,11 @@ async function authApi(req,env){
   const u=new URL(req.url),p=u.pathname;
   if(p==="/api/auth/me"){
     const me=await user(req,env);return json({signedIn:!!me,email:me?.email||null});
+  }
+  if(p==="/api/auth/logout"){
+    if(req.method!=="POST")throw Object.assign(Error("Method not allowed"),{status:405});
+    await destroySession(req,env);
+    return new Response(JSON.stringify({ok:true}),{status:200,headers:{"content-type":"application/json; charset=utf-8","Set-Cookie":clearCookie("mt_session")}});
   }
   if(req.method!=="POST")throw Object.assign(Error("Method not allowed"),{status:405});
   let body={};try{body=await req.json()}catch{throw Object.assign(Error("Invalid JSON"),{status:400})}
@@ -540,12 +579,7 @@ export default {async fetch(req,env){
       if(t.refresh_token)
         await env.SESSIONS.put("drive_refresh_token:"+pr.email,t.refresh_token);
 
-      const sid=crypto.randomUUID(),sessionTtl=31536000;
-      await env.SESSIONS.put(
-        "session:"+sid,
-        JSON.stringify({email:pr.email}),
-        {expirationTtl:sessionTtl}
-      );
+      const sessionCookie=await createSession(env,pr.email);
 
       // If this Google account has no password yet, send the user to the
       // Set Password page. Otherwise continue normally to the home page.
@@ -559,12 +593,14 @@ export default {async fetch(req,env){
         status:302,
         headers:{
           Location:destination,
-          "Set-Cookie":cookie("mt_session",sid,sessionTtl)
+          "Set-Cookie":sessionCookie
         }
       });
     }
 
-    if(u.pathname==="/logout")
+    if(u.pathname==="/logout"){
+      await ensureAuthSchema(env);
+      await destroySession(req,env);
       return new Response(null,{
         status:302,
         headers:{
@@ -572,6 +608,7 @@ export default {async fetch(req,env){
           "Set-Cookie":clearCookie("mt_session")
         }
       });
+    }
 
     if(u.pathname.startsWith("/api/"))
       return await api(req,env);
