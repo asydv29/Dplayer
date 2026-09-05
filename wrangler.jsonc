@@ -1,0 +1,10 @@
+{
+  "$schema":"node_modules/wrangler/config-schema.json",
+  "name":"mytubepersonal",
+  "main":"src/index.js",
+  "compatibility_date":"2026-08-11",
+  "assets":{"directory":"./public","binding":"ASSETS"},
+  "d1_databases":[{"binding":"DB","database_name":"mytube-db","database_id":"1069b82b-f205-4b50-8780-f307d57d989c"}],
+  "kv_namespaces":[{"binding":"SESSIONS","id":"0c35af54259741f1b92774e4228bc7dc"}],
+  "vars":{"DRIVE_FOLDER_NAME":"MyTube Videos"}
+}

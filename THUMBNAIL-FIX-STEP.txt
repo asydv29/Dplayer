@@ -1,0 +1,18 @@
+THUMBNAIL FIX
+
+This update fixes the broken-image icon after changing a custom thumbnail.
+
+Changed file:
+- src/index.js
+
+What was fixed:
+- D1 BLOB thumbnail data is converted to ArrayBuffer before being returned.
+- Correct Content-Type and Content-Length are sent.
+- Thumbnail responses use no-store so a newly changed thumbnail is not stuck in cache.
+- Automatic Google Drive thumbnails remain the fallback when no custom thumbnail exists.
+
+Upload/deploy:
+1. Replace your GitHub project files with this ZIP's contents.
+2. Deploy the Worker again.
+3. Make sure the video_thumbnails table already exists in your D1 database.
+4. Refresh the site (or clear the browser cache once).

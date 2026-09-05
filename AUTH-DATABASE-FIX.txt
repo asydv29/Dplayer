@@ -1,0 +1,13 @@
+AUTH DATABASE FIX
+
+This project now automatically creates the auth_otps table and adds the
+password_hash column when an authentication API request is received.
+
+This fixes:
+- D1_ERROR: no such table: auth_otps
+- D1_ERROR: no such column: password_hash
+
+You can still run the migration files manually, but they are no longer
+required for these two schema items.
+
+Deploy the updated src/index.js with the rest of the project.

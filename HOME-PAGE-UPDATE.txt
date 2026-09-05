@@ -1,0 +1,8 @@
+MyTube Home Page Update
+
+- Home page redesigned to match the supplied dark 3-column video-grid reference.
+- Videos returned from Google Drive are shown as cards.
+- Google Drive folders are not rendered on the home page.
+- A defensive client-side filter also hides any folder object if one is ever returned by the API.
+- Existing watch page, authentication, custom thumbnails, and other Worker routes are left intact.
+- The custom thumbnail fix from the previous ZIP is preserved.

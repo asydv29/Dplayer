@@ -1,0 +1,5 @@
+MyTube final update
+- Email/password authentication remains enabled.
+- Google authentication remains enabled.
+- Automatic thumbnails are preserved as fallback when no custom thumbnail exists.
+- Custom thumbnails remain preferred when present.
