@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#000000">
+<title>Shorts — D Player</title>
+<link rel="stylesheet" href="/shorts.css">
+</head>
+<body class="shorts-page">
+
+<div id="shortsFeed" class="shorts-feed"></div>
+
+<div id="shortsEmpty" class="shorts-empty" hidden>
+  <div class="shorts-empty-icon">◈</div>
+  <h2>No Shorts yet</h2>
+  <p>Mark a video as a Short from its ⋮ menu on the home page and it will play here.</p>
+  <a href="/" class="shorts-empty-btn">← Back to D Player</a>
+</div>
+
+<div id="shortsLoading" class="shorts-loading"><div class="shorts-spinner"></div></div>
+
+<!-- Shared "more" menu (speed / quality). Positioned over whichever slide is active. -->
+<div class="shorts-more-menu" id="shortsMoreMenu" hidden>
+  <div class="shorts-more-panel" id="shortsMoreMain">
+    <button type="button" class="shorts-more-item" id="shortsSpeedBtn"><span>Playback speed</span><span class="shorts-more-value" id="shortsSpeedValue">Normal</span></button>
+    <button type="button" class="shorts-more-item" id="shortsQualityBtn"><span>Quality</span><span class="shorts-more-value" id="shortsQualityValue">Original</span></button>
+    <button type="button" class="shorts-more-item" id="shortsWatchFullBtn"><span>Watch as full video</span><span class="shorts-more-icon">▭</span></button>
+    <button type="button" class="shorts-more-item" id="shortsPipBtn"><span>Picture in picture</span><span class="shorts-more-icon">▣</span></button>
+    <button type="button" class="shorts-more-item" id="shortsReportBtn"><span>Copy link</span><span class="shorts-more-icon">⧉</span></button>
+    <button type="button" class="shorts-more-item" id="shortsRemoveBtn"><span>Remove from Shorts</span><span class="shorts-more-icon">◈</span></button>
+  </div>
+  <div class="shorts-more-panel shorts-more-sub hidden" id="shortsSpeedPanel">
+    <button type="button" class="shorts-more-back" data-back>‹ Playback speed</button>
+    <button data-speed=".5">0.5×</button>
+    <button data-speed=".75">0.75×</button>
+    <button data-speed="1">Normal</button>
+    <button data-speed="1.25">1.25×</button>
+    <button data-speed="1.5">1.5×</button>
+    <button data-speed="1.75">1.75×</button>
+    <button data-speed="2">2×</button>
+  </div>
+  <div class="shorts-more-panel shorts-more-sub hidden" id="shortsQualityPanel">
+    <button type="button" class="shorts-more-back" data-back>‹ Quality</button>
+    <button data-quality="auto" class="active">Auto</button>
+    <button data-quality="original">Original</button>
+    <div class="shorts-quality-status" id="shortsQualityStatus" hidden></div>
+  </div>
+</div>
+
+<div class="shorts-menu-backdrop" id="shortsMenuBackdrop" hidden></div>
+
+<!-- You / account popover -->
+<div class="shorts-toast" id="shortsToast"></div>
+
+<script src="/shorts.js"></script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f0f0f">
+<title>Sign in — D Player</title>
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/auth.css">
+</head>
+<body class="auth-page">
+<main class="auth-wrap">
+  <section class="auth-card">
+    <a class="auth-logo" href="/"><img src="/mytube-logo.jpg" alt="D Player"></a>
+    <h1 id="authTitle">Sign in to D Player</h1>
+    <p class="auth-subtitle" id="authSubtitle">Use your email and password, or continue with Google.</p>
+    <form id="authForm">
+      <label>Email<input id="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+      <label id="nameLabel" class="hidden">Name<input id="name" type="text" autocomplete="name" placeholder="Your name"></label>
+      <label>Password<input id="password" type="password" autocomplete="current-password" minlength="8" required placeholder="At least 8 characters"></label>
+      <label id="confirmLabel" class="hidden">Confirm password<input id="confirm" type="password" autocomplete="new-password" minlength="8" placeholder="Repeat password"></label>
+      <button class="auth-submit" type="submit" id="submitBtn">Sign in</button>
+      <div class="auth-error" id="error"></div>
+    </form>
+    <div class="auth-or"><span>or</span></div>
+    <a class="google-btn" href="/auth/google">Continue with Google</a>
+    <button class="switch-btn" id="switchBtn" type="button">Create an account</button>
+    <p class="auth-note">Your password is securely hashed before it is stored. D Player never stores it as plain text.</p>
+  </section>
+</main>
+<script src="/auth.js"></script>
+</body>
+</html>

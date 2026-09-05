@@ -1,0 +1,1 @@
+async function mytubeSignOut(){try{await fetch('/api/auth/logout',{method:'POST',credentials:'include'})}finally{location.href='/login.html'}}

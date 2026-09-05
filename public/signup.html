@@ -1,0 +1,116 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Create account • D Player</title><style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;background:#0f0f0f;color:#fff}body{display:flex;align-items:center;justify-content:center;padding:24px}
+.wrap{width:100%;max-width:440px}.card{background:#181818;border:1px solid #2b2b2b;border-radius:18px;padding:30px;box-shadow:0 18px 60px #0008}
+.brand{display:flex;justify-content:center;align-items:center;min-height:54px;margin-bottom:14px}.brand img{max-width:190px;max-height:58px;object-fit:contain}.brand-text{font-size:28px;font-weight:800}
+h1{text-align:center;font-size:24px;margin:8px 0 6px}.sub{text-align:center;color:#aaa;font-size:14px;margin:0 0 24px}
+label{display:block;font-size:13px;color:#ddd;margin-bottom:7px}.pw{position:relative;margin-bottom:16px}.pw input{margin:0;padding-right:48px}.eye{position:absolute;right:4px;top:4px;width:40px;height:40px;background:transparent;color:#aaa;border:0;padding:0;font-size:17px}.eye:hover{background:transparent;color:#fff}input{width:100%;height:48px;border:1px solid #444;background:#0f0f0f;color:#fff;border-radius:10px;padding:0 13px;font-size:15px;outline:0;margin-bottom:16px}input:focus{border-color:#aaa}
+button{width:100%;height:48px;border:0;border-radius:10px;background:#fff;color:#111;font-size:15px;font-weight:700;cursor:pointer}button:disabled{opacity:.55}
+.google{background:#272727;color:#fff;border:1px solid #444;margin-top:20px}.divider{display:flex;align-items:center;gap:10px;color:#777;font-size:12px;margin:20px 0}.divider:before,.divider:after{content:"";height:1px;background:#333;flex:1}
+.switch,.back{text-align:center;font-size:14px;margin-top:20px}a{color:#fff;text-decoration:none;font-weight:700}.back{display:block;color:#888;font-size:13px;font-weight:400}
+.msg{display:none;margin-bottom:15px;padding:10px 12px;border-radius:9px;background:#321b1b;color:#ffb5b5;font-size:13px}
+</style></head><body><main class="wrap"><section class="card"><div class="brand"><img src="mytube-logo.jpg" alt="D Player"></div>
+<h1>Create your D Player account</h1><p class="sub">Join D Player with your email and password</p><div id="msg" class="msg"></div>
+<form id="signupForm"><label>Name</label><input id="name" type="text" autocomplete="name" placeholder="Your name" required>
+<label>Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+<label>Password</label><div class="pw"><input id="password" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required><button class="eye" type="button" data-target="password" aria-label="Show password">◉</button></div>
+<label>Confirm password</label><div class="pw"><input id="confirm" type="password" autocomplete="new-password" minlength="8" placeholder="Enter password again" required><button class="eye" type="button" data-target="confirm" aria-label="Show password">◉</button></div>
+<button id="signupBtn" type="submit">Create account</button></form>
+<div class="divider">OR</div><button class="google" id="googleBtn" type="button">Continue with Google</button>
+<p class="switch">Already have an account? <a href="/login.html">Sign in</a></p><a class="back" href="/">← Back to D Player</a>
+</section></main>
+<script>
+const form = document.getElementById('signupForm');
+const msg = document.getElementById('msg');
+const btn = document.getElementById('signupBtn');
+
+const nameInput = document.getElementById('name');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const confirmInput = document.getElementById('confirm');
+const googleBtn = document.getElementById('googleBtn');
+
+function show(message) {
+    msg.textContent = message;
+    msg.style.display = 'block';
+}
+
+form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    msg.style.display = 'none';
+
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    const confirmPassword = confirmInput.value;
+
+    // Check passwords using the actual input elements
+    if (password !== confirmPassword) {
+        show('Passwords do not match.');
+        return;
+    }
+
+    if (password.length < 8) {
+        show('Password must be at least 8 characters.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating account…';
+
+    try {
+        const response = await fetch('/api/auth/signup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                password: password
+            })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(
+                data.error ||
+                data.message ||
+                'Unable to create account.'
+            );
+        }
+
+        window.location.href = data.redirect || '/';
+
+    } catch (error) {
+        show(error.message || 'Unable to create account.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create account';
+    }
+});
+
+// Show/hide password
+document.querySelectorAll('.eye').forEach(button => {
+    button.addEventListener('click', function () {
+        const input = document.getElementById(this.dataset.target);
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            this.textContent = '◉';
+            this.setAttribute('aria-label', 'Hide password');
+        } else {
+            input.type = 'password';
+            this.textContent = '◌';
+            this.setAttribute('aria-label', 'Show password');
+        }
+    });
+});
+
+googleBtn.addEventListener('click', function () {
+    window.location.href = '/auth/google';
+});
+</script></body></html>

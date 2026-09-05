@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f0f0f">
+<title>Watch — D Player</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body class="watch-page home-page">
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-head">
+    <img class="brand-logo sidebar-logo" src="/mytube-logo.jpg" alt="">
+    <span class="sidebar-title">D Player</span>
+    <button class="icon-btn sidebar-close" id="sidebarClose" aria-label="Close menu">×</button>
+  </div>
+  <a class="side-item" href="/" data-nav="home">
+    <span class="side-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2 3 10.5V21a1 1 0 0 0 1 1h5.5a.75.75 0 0 0 .75-.75V15.5a1.75 1.75 0 0 1 3.5 0v5.75c0 .414.336.75.75.75H20a1 1 0 0 0 1-1V10.5L12 3.2Z"/></svg></span>
+    <span>Home</span>
+  </a>
+  <button class="side-item" data-view="shorts">
+    <span class="side-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.9 2 5 13h5l-1 9 8-12h-5l3.9-8Z"/></svg></span>
+    <span>Shorts</span>
+  </button>
+  <a class="side-item" href="/?list=liked">
+    <span class="side-icon like-icon side-like"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></span>
+    <span>Liked Video</span>
+  </a>
+  <a class="side-item" href="/?list=liked&view=shorts">
+    <span class="side-icon like-icon side-like"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></span>
+    <span>Liked Short</span>
+  </a>
+  <a class="side-item" href="/?list=favorites">
+    <span class="side-icon fav-icon side-fav-icon"></span>
+    <span>Favorites</span>
+  </a>
+  <button class="side-item" data-view="history">
+    <span class="side-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 1 0 8.94 10h-2.02A7 7 0 1 1 13 5c1.66 0 3.14.63 4.28 1.66L14 10h7V3l-2.35 2.35A8.98 8.98 0 0 0 13 3Z"/><path d="M12 8v5l4 2-.75 1.3L11 13.5V8Z"/></svg></span>
+    <span>History</span>
+  </button>
+  <div class="side-divider"></div>
+  <div class="side-title">Folders</div>
+  <div id="folderTree" class="folder-tree"><div class="side-small">Loading folders…</div></div>
+  <div class="side-divider"></div>
+  <div class="side-title">You</div>
+  <button class="side-item" id="profileBtn">
+    <span class="side-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.42 0-8 2.24-8 5v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1c0-2.76-3.58-5-8-5Z"/></svg></span>
+    <span>Your profile</span>
+  </button>
+  <a class="side-item" href="/change-password.html">
+    <span class="side-icon"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a5 5 0 0 0-5 5v3H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Zm3 3a1.75 1.75 0 0 1 1 3.18V18a1 1 0 1 1-2 0v-1.82A1.75 1.75 0 0 1 12 13Z"/></svg></span>
+    <span>Change password</span>
+  </a>
+  <div class="side-divider"></div>
+  <div class="side-small" id="accountStatus">Checking account…</div>
+  <a class="side-signout" href="/logout">Sign out</a>
+</aside>
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose">×</button>
+    <h2 id="modalTitle">D Player</h2>
+    <p id="modalText"></p>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+<header class="topbar"><button class="icon-btn menu-btn" id="menuBtn" aria-label="Menu">☰</button><a class="brand" href="/">▶ <span>D Player</span></a><div class="top-actions"><a href="/" class="home-link">Home</a></div></header>
+<main class="watch-layout">
+<section class="watch-main">
+<div class="player" id="player">
+<video id="video" playsinline preload="metadata"></video>
+<div class="center-play" id="centerPlay">▶</div><div class="center-flash" id="centerFlash"></div><div class="gesture-hint" id="gestureHint"></div><div class="speed-badge" id="speedBadge"><span class="speed-badge-icon">▶▶</span><span id="speedBadgeText">2x</span></div><div class="ts-status" id="tsStatus" hidden></div>
+<div class="skip-indicator skip-indicator-left" id="skipLeft"><span class="skip-indicator-icon">◁◁</span><span class="skip-indicator-text" id="skipLeftText">10 seconds</span></div>
+<div class="skip-indicator skip-indicator-right" id="skipRight"><span class="skip-indicator-icon">▷▷</span><span class="skip-indicator-text" id="skipRightText">10 seconds</span></div>
+<div class="player-loading" id="playerLoading"><div class="spinner-ring"></div></div>
+<div class="shortcuts-panel" id="shortcutsPanel" hidden>
+<div class="shortcuts-card">
+<button class="shortcuts-close" id="shortcutsClose" aria-label="Close shortcuts">✕</button>
+<h2>Keyboard shortcuts</h2>
+<ul>
+<li><span class="key">Space / K</span><span>Play / pause</span></li>
+<li><span class="key">← / →</span><span>Back / forward 5s</span></li>
+<li><span class="key">J / L</span><span>Back / forward 10s</span></li>
+<li><span class="key">↑ / ↓</span><span>Volume up / down</span></li>
+<li><span class="key">M</span><span>Mute / unmute</span></li>
+<li><span class="key">F</span><span>Fullscreen</span></li>
+<li><span class="key">I</span><span>Picture-in-picture</span></li>
+<li><span class="key">0–9</span><span>Jump to 0%–90%</span></li>
+<li><span class="key">Home / End</span><span>Jump to start / end</span></li>
+<li><span class="key">, / .</span><span>Step one frame (paused)</span></li>
+<li><span class="key">&lt; / &gt;</span><span>Slower / faster speed</span></li>
+<li><span class="key">?</span><span>Toggle this panel</span></li>
+</ul>
+</div>
+</div>
+<div class="controls" id="controls">
+<div class="seek-area" id="seekArea"><div class="preview" id="preview"><canvas id="previewCanvas" width="192" height="108"></canvas><div id="previewTime">0:00</div></div><div class="timeline" id="timeline"><div class="buffered" id="buffered"></div><div class="played" id="played"></div><div class="scrubber" id="scrubber"></div></div></div>
+<div class="control-row"><button class="control-btn" id="playBtn" aria-label="Play or pause">▶</button><button class="control-btn volume-btn" id="muteBtn" aria-label="Mute"><span class="volume-icon" id="volumeIcon"></span></button><input class="volume-range" id="volumeRange" type="range" min="0" max="1" step="0.01" value="1"><span class="time" id="time">0:00 / 0:00</span><div class="control-spacer"></div><button class="control-btn" id="qualityBtn" aria-label="Video quality">Original</button><button class="control-btn" id="fitBtn" aria-label="Zoom to fill">Fill</button><button class="control-btn" id="moreBtn" aria-label="More options">⋮</button><button class="control-btn" id="fullscreenBtn" aria-label="Fullscreen">⛶</button></div>
+<div class="quality-menu" id="qualityMenu">
+  <button data-quality="auto">Auto</button>
+  <button data-quality="original" class="active">Original</button>
+  <button data-quality="1080">1080p</button>
+  <button data-quality="720">720p</button>
+  <button data-quality="480">480p</button>
+  <button data-quality="360">360p</button>
+  <button data-quality="240">240p</button>
+  <div class="quality-status" id="qualityStatus" hidden></div>
+  <div class="quality-note">Auto and Original play the source stream directly. Other resolutions are prepared in your browser and may take a moment on longer videos.</div>
+</div>
+<div class="more-menu" id="moreMenu">
+  <div class="more-menu-panel" id="moreMenuMain">
+    <button type="button" class="more-menu-item" id="moreCastBtn" hidden><span>Cast</span><span class="more-menu-icon" id="moreCastIcon">📺</span></button>
+    <button type="button" class="more-menu-item" id="moreSpeedBtn"><span>Playback speed</span><span class="more-menu-value" id="moreSpeedValue">Normal</span></button>
+    <button type="button" class="more-menu-item" id="moreShortcutsBtn"><span>Keyboard shortcuts</span><span class="more-menu-icon">⌨</span></button>
+    <button type="button" class="more-menu-item" id="morePipBtn"><span>Picture in picture</span><span class="more-menu-icon">▣</span></button>
+  </div>
+  <div class="more-menu-panel more-menu-speed hidden" id="moreMenuSpeed">
+    <button type="button" class="more-menu-back" id="moreSpeedBack">‹ Playback speed</button>
+    <button data-speed=".5">0.5×</button>
+    <button data-speed=".75">0.75×</button>
+    <button data-speed="1">Normal</button>
+    <button data-speed="1.25">1.25×</button>
+    <button data-speed="1.5">1.5×</button>
+    <button data-speed="1.75">1.75×</button>
+    <button data-speed="2">2×</button>
+    <button data-speed="2.5">2.5×</button>
+    <button data-speed="3">3×</button>
+  </div>
+</div>
+</div></div>
+<h1 id="title" class="skel-text">Loading…</h1><div class="video-meta" id="videoMeta"><span id="metaText"></span></div>
+<div class="actions"><button id="like" class="action-btn">❤️ Like</button><button id="fav" class="action-btn">☆ Favorite</button><button id="changeThumbnailBtn" class="action-btn">🖼 Thumbnail</button><input id="watchThumbnailInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden><button id="downloadBtn" class="action-btn"><img src="/icons/download.png" alt="" class="action-icon"> Download</button><button id="deleteBtn" class="action-btn">🗑 Delete</button></div>
+</section>
+<aside class="recommendations"><div class="rec-head"><button type="button" id="recRefreshBtn" class="rec-refresh-btn" aria-label="Refresh recommendations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg></button></div><div id="recommendationList" class="recommendation-list">
+  <div class="rec-skel"></div><div class="rec-skel"></div><div class="rec-skel"></div><div class="rec-skel"></div>
+</div><div id="recSentinel" class="rec-sentinel" aria-hidden="true"></div></aside>
+</main><script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script><script src="/watch.js"></script>
+</body></html>
