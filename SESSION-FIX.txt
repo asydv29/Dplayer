@@ -1,21 +1,26 @@
 SESSION FIX — sign-in no longer immediately bounces back to login
 
-What was wrong:
-- Login sessions were stored in Cloudflare Workers KV.
-- KV is only "eventually consistent" — Cloudflare's own docs say a value
-  you just wrote is not guaranteed to be readable again for up to 60
-  seconds, even from the same location.
-- The app writes the session, then immediately redirects to "/" and
-  checks that same session. That immediate re-read is exactly the case
-  KV isn't built for, so it looked like you were signed out again right
-  after signing in.
+Round 1 — sessions moved off Workers KV:
+- Login sessions were originally stored in Cloudflare Workers KV.
+- KV is only "eventually consistent" — a value you just wrote is not
+  guaranteed to be readable again for up to 60 seconds, even from the
+  same location.
+- Fix: sessions were moved to D1 (a real SQL database, already used
+  elsewhere in this project).
 
-What changed (src/index.js):
-- Sessions now live in D1 (a real SQL database, already used elsewhere
-  in this project) instead of KV. D1 gives a read-after-write guarantee,
-  so a session is valid the instant it's created.
-- A new "sessions" table is created automatically on first request
-  (also included as migration-sessions.sql if you want to run it by hand).
+Round 2 — D1 read replicas were still stale:
+- D1 has its own "global read replication" feature. Even in D1, a plain
+  read can be served by a nearby read replica that hasn't caught up to a
+  write that just happened a moment ago on the primary database — the
+  same kind of lag as the KV issue, one layer down. This is why sign-in
+  still bounced straight back to login after moving sessions to D1.
+- Fix: the session check now uses D1's Sessions API
+  (env.DB.withSession("first-primary")), which forces that read to go to
+  the primary database instead of a possibly-stale replica. A session is
+  now guaranteed visible the instant it's created, regardless of whether
+  read replication is on for this database.
+
+Other fixes bundled in:
 - Added the missing POST /api/auth/logout route (the sign-out
   confirmation page was already calling it, but it didn't exist, so
   clicking "Sign out" there never actually cleared your session).
@@ -31,3 +36,4 @@ Deploy/upload:
 3. No manual DB migration is required — the sessions table is created
    automatically. migration-sessions.sql is provided if you prefer to
    run it yourself.
+
