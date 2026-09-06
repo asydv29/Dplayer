@@ -125,7 +125,73 @@ async function destroySession(req,env){
 }
 async function ensureAuthSchema(env){
   // Keep existing production D1 databases compatible even when the
-  // one-time migrations were not applied yet.
+  // one-time migrations (schema.sql etc.) were never applied yet — on a
+  // brand new D1 database `users` itself doesn't exist, which used to make
+  // the ALTER TABLE below throw "no such table: users" before login could
+  // ever run. Create the core tables (mirrors schema.sql) first so this
+  // function is safe to call against a completely empty database.
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      name TEXT,
+      picture TEXT,
+      password_hash TEXT,
+      created_at INTEGER NOT NULL
+    )
+  `).run();
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS videos (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      drive_file_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `).run();
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS likes (
+      user_id TEXT NOT NULL,
+      video_id TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      PRIMARY KEY (user_id,video_id)
+    )
+  `).run();
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS favorites (
+      user_id TEXT NOT NULL,
+      video_id TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      PRIMARY KEY (user_id,video_id)
+    )
+  `).run();
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS views (
+      user_id TEXT NOT NULL,
+      video_id TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `).run();
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS video_thumbnails (
+      user_id TEXT NOT NULL,
+      video_id TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      image_data BLOB NOT NULL,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY (user_id,video_id)
+    )
+  `).run();
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS video_shorts (
+      user_id TEXT NOT NULL,
+      video_id TEXT NOT NULL,
+      is_short INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY (user_id,video_id)
+    )
+  `).run();
+
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS auth_otps (
       id TEXT PRIMARY KEY,
