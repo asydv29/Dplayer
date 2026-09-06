@@ -535,8 +535,11 @@ export default {async fetch(req,env){
     const u=new URL(req.url);
 
     if(u.pathname==="/auth/google"){
+      // Keep the OAuth state in a short-lived HttpOnly cookie instead of KV.
+      // Workers KV is eventually consistent, so the callback can reach a
+      // different Cloudflare location before the just-created KV value is
+      // visible there, causing a false "Invalid OAuth state" error.
       const state=crypto.randomUUID();
-      await env.SESSIONS.put("oauth_state:"+state,"1",{expirationTtl:600});
       const redirect=u.origin+"/auth/google/callback";
       const q=new URLSearchParams({
         client_id:env.GOOGLE_CLIENT_ID,
@@ -547,15 +550,17 @@ export default {async fetch(req,env){
         prompt:"consent",
         state
       });
-      return Response.redirect("https://accounts.google.com/o/oauth2/v2/auth?"+q,302);
+      return new Response(null,{status:302,headers:{
+        Location:"https://accounts.google.com/o/oauth2/v2/auth?"+q,
+        "Set-Cookie":cookie("oauth_state",state,600)
+      }});
     }
 
     if(u.pathname==="/auth/google/callback"){
       const state=u.searchParams.get("state");
-      if(!state||!(await env.SESSIONS.get("oauth_state:"+state)))
+      const savedState=getCookie(req,"oauth_state");
+      if(!state||!savedState||state!==savedState)
         return new Response("Invalid OAuth state",{status:400});
-
-      await env.SESSIONS.delete("oauth_state:"+state);
 
       const redirect=u.origin+"/auth/google/callback";
       const t=await exchange(env,u.searchParams.get("code"),redirect);
@@ -597,7 +602,7 @@ export default {async fetch(req,env){
         status:302,
         headers:{
           Location:destination,
-          "Set-Cookie":sessionCookie
+          "Set-Cookie":[sessionCookie,clearCookie("oauth_state")]
         }
       });
     }
